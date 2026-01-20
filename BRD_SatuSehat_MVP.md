@@ -28,10 +28,10 @@ Fokus pada *Core Features* untuk operasional dasar klinik rawat jalan:
 #### 3.1 Flowchart Registrasi Pasien (Integrasi SatuSehat)
 ```mermaid
 graph TD
-    A[Pasien Datang] --> B{Pasien Baru/Lama?}
+    A[Pasien Datang] --> B{"Pasien Baru/Lama?"}
     B -- Baru --> C[Input NIK]
-    C --> D[Request API SatuSehat (Patient by NIK)]
-    D --> E{Data Ditemukan?}
+    C --> D["Request API SatuSehat (Patient by NIK)"]
+    D --> E{"Data Ditemukan?"}
     E -- Ya --> F[Auto-Fill Data Identitas]
     E -- Tidak --> G[Input Manual & Sync ke SatuSehat]
     B -- Lama --> H[Cari Nama/RM/NIK Lokal]
@@ -51,18 +51,18 @@ graph TD
 graph TD
     A[Antrean Nurse Station] --> B[Perawat Input Vital Sign]
     B --> C[Status: Menunggu Dokter]
-    C --> D[Dokter: Anamnesa & Pemfis (S & O)]
-    D --> E[Dokter: Diagnosis ICD-10 (A)]
-    E --> F{Order Penunjang?}
-    F -- Ya -> Lab/Rad --> G{Tipe Bayar?}
+    C --> D["Dokter: Anamnesa & Pemfis (S & O)"]
+    D --> E["Dokter: Diagnosis ICD-10 (A)"]
+    E --> F{"Order Penunjang?"}
+    F -- Ya -> Lab/Rad --> G{"Tipe Bayar?"}
     G -- Prepaid --> H[Kasir: Bayar Dulu]
     H --> I[Petugas Lab: Input Hasil]
     G -- Postpaid --> I
-    F -- Tidak --> J[Dokter: Terapi/Resep & Tindakan (P)]
-    J --> K[Finalisasi Resume Medis (Encounter Finish)]
+    F -- Tidak --> J["Dokter: Terapi/Resep & Tindakan (P)"]
+    J --> K["Finalisasi Resume Medis (Encounter Finish)"]   
     I --> K
     K --> L[Kirim Data 'Encounter' & 'Condition' ke SatuSehat]
-    L --> M[Status: Menunggu Farmasi/Kasir]
+    L --> M["Status: Menunggu Farmasi/Kasir"]
 ```
 
 ### 4. KEBUTUHAN FUNGSIONAL (DETAILED)
