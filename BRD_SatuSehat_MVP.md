@@ -135,11 +135,7 @@ graph TD
 | **Apoteker** | ❌ | 👀 | ❌ | ✅ | ❌ | ✅ (Obat) |
 | **Admin** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (Full) |
 
-### 7. ARSITEKTUR & TECH STACK (REKOMENDASI)
 
-**Modern Web Application (Monorepo/Modular):**
-*   **Frontend:** Next.js (React) - Performance & SEO friendly.
-    *   UI Framework: Tailwind CSS + ShadcnUI (Clean, Modern, Medical aesthetic).
 ### 7. ARSITEKTUR & TECH STACK (REKOMENDASI)
 
 **Modern Web Application (Monorepo/Modular):**
