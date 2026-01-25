@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://primadi.github.io/lokstra/schema/lokstra.schema.json
+
+configs:
+  repository:
+    tenant-repository: postgres-tenant-repository
+
+service-definitions:
+  db_main:
+    type: dbpool_pg
+    config:
+      dsn: ${DB_MAIN_DSN:postgres://postgres:adm1n@localhost:5432/klinik_db}
+      schema: ${DB_MAIN_SCHEMA:klinik_main}
+  db_auth:
+    type: dbpool_pg
+    config:
+      dsn: ${DB_MAIN_DSN:postgres://postgres:adm1n@localhost:5432/klinik_db}
+      schema: ${DB_MAIN_SCHEMA:klinik_auth}
+
+servers:
+  backend:
+    base-url: "http://localhost"
+    addr: ":3008"
+    published-services: [tenant-service]

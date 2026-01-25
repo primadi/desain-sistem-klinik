@@ -1,5 +1,6 @@
 # APPLICATION DESIGN DOCUMENT
 ## PROYEK: SISTEM INFORMASI KLINIK TERINTEGRASI SATUSEHAT
+**Versi: 1.0**
 
 ### 1. STRUKTUR MENU & NAVIGASI (SITEMAP)
 
@@ -27,7 +28,13 @@ Sistem akan membagi menu berdasarkan Role User (RBAC).
 *   **Triage / Vital Sign**: Input TTV sebelum pasien masuk ke dokter.
 *   **Tindakan Keperawatan**: Input tindakan pendelegasian.
 
-#### E. Farmasi (Apotek)
+
+#### E. Unit Penunjang (Lab / Radiologi)
+*   **Daftar Order Masuk**: List permintaan dari Dokter.
+    *   *Indikator Prepaid*: "LUNAS/BELUM LUNAS". (Tidak bisa input hasil jika PREPAID & BELUM LUNAS).
+*   **Input Hasil**: Form input parameter hasil pemeriksaan.
+
+#### F. Farmasi (Apotek)
 *   **E-Resep Masuk**: Queue resep dari dokter.
 *   **Input Resep Manual**: Form untuk resep luar/manual.
 *   **Penjualan Bebas (OTC)**: Kasir khusus obat bebas.
@@ -35,11 +42,11 @@ Sistem akan membagi menu berdasarkan Role User (RBAC).
     *   *Kartu Stok*
     *   *Opname Stok*
 
-#### F. Kasir (Billing)
+#### G. Kasir (Billing)
 *   **Tagihan Open**: List pasien yang belum lunas (Prepaid/Postpaid).
 *   **Riwayat Transaksi**: Laporan pembayaran harian.
 
-#### G. Administrator / Back Office
+#### H. Administrator / Back Office
 *   **Master Data**: User, Dokter, Poli, Jasa Medis, Data Obat/KFA.
 *   **Laporan**: Kunjungan, 10 Besar Penyakit, Pendapatan, Stok Log.
 *   **Settings**: Bridging SatuSehat (Client ID/Secret), Printer Config.
@@ -78,7 +85,18 @@ Sistem akan membagi menu berdasarkan Role User (RBAC).
     *   `Tindakan` (Autocomplete ICD-9-CM / Master Tindakan)
     *   `Instruksi Medis` (Textarea)
 
-#### D. Form E-Resep
+    *   `Instruksi Medis` (Textarea)
+
+#### D. Form Order & Input Hasil Penunjang (Lab/Rad)
+*   **Input Order (Dokter)**:
+    *   `Jenis Pemeriksaan` (Darah Lengkap, Rontgen Thorax, dll).
+    *   `Prioritas` (Cito/Regular).
+*   **Input Hasil (Petugas Lab)**:
+    *   `Parameter` (HB, Leukosit, dll).
+    *   `Nilai Hasil` & `Nilai Rujukan`.
+    *   `Upload Lampiran` (PDF/Image) - *Optional*.
+
+#### E. Form E-Resep
 *   **Input Item**:
     *   `Nama Obat` (Search Master Obat)
     *   `Jumlah`
@@ -86,7 +104,7 @@ Sistem akan membagi menu berdasarkan Role User (RBAC).
     *   `Rute Pemberian` (Oral, Injeksi, dll)
 *   **Action**: Tambah ke list -> Simpan Resep.
 
-#### E. Form Pembayaran (Kasir)
+#### F. Form Pembayaran (Kasir)
 *   **View**: Detail Tagihan (Jasa Dokter, Tindakan, Lab, Obat).
 *   **Input**:
     *   `Diskon` (Nominal/Persen) - *Optional*
@@ -96,85 +114,143 @@ Sistem akan membagi menu berdasarkan Role User (RBAC).
 
 ---
 
-### 3. ENTITY RELATIONSHIP DIAGRAM (ERD)
+### 3. ENTITY RELATIONSHIP DIAGRAMS (ERD)
 
-Desain database relasional untuk mendukung fitur di atas.
+Desain database dipecah menjadi beberapa modul untuk kemudahan pembacaan.
+
+#### 3.1. Clinical Core (Pasien & Rekam Medis)
+
+Mengatur data utama pasien, kunjungan, dan data klinis (SOAP).
 
 ```mermaid
 erDiagram
-    %% Core Users
     USERS {
         uuid id PK
+        uuid tenant_id FK
         string username
-        string password_hash
         string full_name
-        string role "Enum: DOCTOR, NURSE, ADMIN, CASHIER, PHARMACIST"
-        string ihs_id "SatuSehat Practitioner ID"
+        string role "ENUM: DOCTOR, NURSE, ADMIN, ETC"
+        string ihs_id "SatuSehat ID"
     }
 
-    %% Patient Data
     PATIENTS {
         uuid id PK
-        string nik UK "Nomor Induk Kependudukan"
-        string ihs_id "SatuSehat Patient ID"
-        string no_rm UK "Nomor Rekam Medis Local"
+        uuid tenant_id FK
+        string nik UK
+        string no_rm UK
         string full_name
         date birth_date
-        string gender
-        string phone
         string address
+        string ihs_id "SatuSehat ID"
     }
 
-    %% Clinical Flow
     ENCOUNTERS {
         uuid id PK
+        uuid tenant_id FK
         uuid patient_id FK
         uuid practitioner_id FK
         timestamp start_time
         timestamp end_time
-        string status "ARRIVED, IN_PROGRESS, FINISHED, CANCELLED"
-        string ihs_id "SatuSehat Encounter ID"
-        string payment_status "UNPAID, PARTIAL, PAID"
+        string status "ARRIVED, IN_PROGRESS, FINISHED"
+        string ihs_id
+        text subjective_complaint "S: Patient Complaint"
+        text objective_findings "O: Physical Examination Narrative"
+        text plan_instructions "P: Instructions/Education"
     }
 
     OBSERVATIONS {
+        %% Vital Signs Data & Lab Results - Mandatory for SatuSehat
         uuid id PK
+        uuid tenant_id FK
         uuid encounter_id FK
-        string code "LOINC Code"
-        string value
-        string unit
-        timestamp recorded_at
+        string code "LOINC Code (e.g., 85354-9 for Bio Data)"
+        string value "Value (e.g., 120/80)"
+        string unit "Unit (e.g., mmHg)"
     }
 
     CONDITIONS {
+        %% Diagnosis Data (ICD-10) - Mandatory for SatuSehat
         uuid id PK
+        uuid tenant_id FK
         uuid encounter_id FK
-        string icd10_code
-        string icd10_name
-        string type "PRIMARY, SECONDARY"
+        string icd10_code "Diagnosis Code (e.g., A00.1)"
+        string type "PRIMARY / SECONDARY"
     }
 
-    %% Pharmacy
+    USERS ||--|{ ENCOUNTERS : handles
+    PATIENTS ||--|{ ENCOUNTERS : has
+    ENCOUNTERS ||--|{ OBSERVATIONS : contains
+    ENCOUNTERS ||--|{ CONDITIONS : diagnosed_with
+```
+
+#### 3.2. Pharmacy & Inventory (Obat & Resep)
+
+Mengelola master data obat, stok, dan resep elektronik.
+
+```mermaid
+erDiagram
     PRODUCTS {
         uuid id PK
-        string kfa_code "Kamus Farmasi Alkes Code"
+        uuid tenant_id FK
         string name
-        int stock
+        string kfa_code "KFA Code (Pharmacy Dictionary)"
         decimal price
         boolean is_otc
     }
 
+    LOCATIONS {
+        uuid id PK
+        uuid tenant_id FK
+        string name "e.g., Main Warehouse, Poly A, Poly B"
+        string type "WAREHOUSE / DEPO / UNIT"
+    }
+
+    STOCK_BATCHES {
+        uuid id PK
+        uuid tenant_id FK
+        uuid product_id FK
+        uuid location_id FK
+        string batch_number
+        date expired_date
+        int stock_qty
+    }
+
+    STOCK_MOVEMENTS {
+        uuid id PK
+        uuid tenant_id FK
+        uuid product_id FK
+        uuid from_location_id FK
+        uuid to_location_id FK
+        uuid reference_id "ID of Invoice/PO/Adjustment"
+        string movement_type "SALE, PURCHASE, TRANSFER, ADJUSTMENT"
+        int quantity
+        timestamp created_at
+    }
+
     MEDICATION_REQUESTS {
         uuid id PK
+        uuid tenant_id FK
         uuid encounter_id FK
         uuid product_id FK
         int quantity
         string dosage_instruction
     }
 
-    %% Billing
+    ENCOUNTERS ||--|{ MEDICATION_REQUESTS : prescribed
+    PRODUCTS ||--|{ STOCK_BATCHES : "stored_as"
+    LOCATIONS ||--|{ STOCK_BATCHES : "has_stock"
+    PRODUCTS ||--|{ STOCK_MOVEMENTS : "moved"
+```
+
+#### 3.3. Billing & Services (Kasir & Penunjang)
+
+Mengelola tagihan, pembayaran, dan order penunjang (Lab/Rad).
+
+```mermaid
+erDiagram
     INVOICES {
         uuid id PK
+        uuid tenant_id FK
         uuid encounter_id FK
         decimal total_amount
         decimal discount
@@ -185,22 +261,52 @@ erDiagram
     
     INVOICE_ITEMS {
         uuid id PK
+        uuid tenant_id FK
         uuid invoice_id FK
         string item_type "SERVICE, DRUG, LAB"
-        uuid reference_id "ID of Action/Product"
         string name
         int quantity
         decimal price
         decimal subtotal
     }
 
-    %% Relationships
-    USERS ||--|{ ENCOUNTERS : "handles"
-    PATIENTS ||--|{ ENCOUNTERS : "has"
-    ENCOUNTERS ||--|{ OBSERVATIONS : "contains"
-    ENCOUNTERS ||--|{ CONDITIONS : "diagnosed_with"
-    ENCOUNTERS ||--|{ MEDICATION_REQUESTS : "prescribed"
-    ENCOUNTERS ||--|| INVOICES : "billed_as"
-    PRODUCTS ||--|{ MEDICATION_REQUESTS : "dispensed_as"
-    INVOICES ||--|{ INVOICE_ITEMS : "consists_of"
+    SERVICE_REQUESTS {
+        uuid id PK
+        uuid tenant_id FK
+        uuid encounter_id FK
+        string service_code
+        string status "ORDERED, PAID, IN_PROGRESS, COMPLETED"
+        decimal price
+    }
+    
+    DIAGNOSTIC_REPORTS {
+        uuid id PK
+        uuid tenant_id FK
+        uuid request_id FK
+        uuid patient_id FK "Optional: If external lab result without encounter"
+        string result_value
+        string attachment_url
+    }
+
+    %% Konek ke Encounter dari modul Clinical
+    ENCOUNTERS {
+        uuid id PK
+        string payment_status
+    }
+
+    ENCOUNTERS ||--|| INVOICES : billed_as
+    INVOICES ||--|{ INVOICE_ITEMS : consists_of
+    ENCOUNTERS ||--|{ SERVICE_REQUESTS : orders
+    SERVICE_REQUESTS ||--|{ DIAGNOSTIC_REPORTS : results_in
 ```
+
+### 4. FUTURE DEVELOPMENT ROADMAP (ERP MODULES)
+
+Sistem dirancang untuk dapat dikembangkan ke arah ERP (Enterprise Resource Planning) di masa depan:
+
+*   **Modul Pembelian (Purchasing)**: Purchase Order (PO) obat/alkes, Penerimaan Barang.
+*   **Modul Hutang (AP)**: Manajemen hutang ke supplier obat.
+*   **Modul Piutang (AR)**: Manajemen tagihan asuransi/perusahaan.
+*   **Modul Keuangan (Finance)**: Petty Cash, Bank Transfer.
+*   **Modul Akuntansi (GL)**: Jurnal Otomatis, Buku Besar, Neraca, Laba/Rugi.
+

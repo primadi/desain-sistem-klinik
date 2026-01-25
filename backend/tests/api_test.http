@@ -1,0 +1,32 @@
+### Global Variables
+@baseUrl = http://localhost:8080
+
+### 1. Tenant Management (Pilot)
+
+#### List Tenants
+GET {{baseUrl}}/tenants
+Content-Type: application/json
+
+#### Create Tenant
+POST {{baseUrl}}/tenants
+Content-Type: application/json
+
+{
+    "name": "Klinik Sehat Selalu",
+    "address": "Jl. Mawar No. 10, Jakarta"
+}
+
+#### Get Tenant by ID
+GET {{baseUrl}}/tenants/1
+Content-Type: application/json
+
+### 2. Common & Authentication (Placeholder)
+
+#### Login (Placeholder)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "dr_budi",
+    "password": "secure_password"
+}

@@ -1,5 +1,6 @@
 # BUSINESS REQUIREMENTS DOCUMENT (BRD)
 ## PROYEK: SISTEM INFORMASI KLINIK TERINTEGRASI SATUSEHAT (MVP)
+**Versi: 1.0**
 
 ### 1. INFORMASI UMUM
 
@@ -93,8 +94,10 @@ graph TD
 
 #### C. Modul Penunjang (Lab & Tindakan)
 1.  **Order List:** Notifikasi order baru dari dokter.
-2.  **Input Hasil:** Template hasil sederhana.
-3.  **Billing Trigger:** Tindakan otomatis menambah tagihan.
+3.  **Input Hasil (Internal & Eksternal):**
+    *   Input parameter hasil untuk pasien rawat jalan (Internal).
+    *   Upload hasil lab luar (PDF/Image) langsung ke pasien (Eksternal/Rujukan Balik).
+4.  **Billing Trigger:** Tindakan otomatis menambah tagihan.
 
 #### D. Modul Farmasi
 1.  **E-Resep Queue:** Daftar resep elektronik masuk dari Poli.
@@ -102,10 +105,14 @@ graph TD
 3.  **Penjualan Bebas (OTC & Resep Umum):**
     *   Penjualan obat bebas (Over The Counter) tanpa resep dokter klinik.
     *   Layanan resep dari luar klinik (Resep Umum).
-4.  **Verifikasi & Etiket:**
-    *   Cek ketersediaan stok.
+4.  **Manajemen Stok Lanjutan:**
+    *   **Multi-lokasi:** Gudang Utama, Depo Poli, Unit Lain.
+    *   **Batch & Expiry:** Pelacakan tanggal kadaluarsa dan nomor batch per item.
+    *   **Mutasi Stok:** Pencatatan Penerimaan, Penjualan, Transfer Antar Gudang, dan Penyesuaian (Opname).
+5.  **Verifikasi & Etiket:**
+    *   Cek ketersediaan stok (FIFO berdasarkan Batch).
     *   Cetak label obat (Aturan pakai, Nama Pasien).
-5.  **Dispensing:** Konfirmasi obat diserahkan -> Kurangi stok -> Trigger `MedicationDispense` (SatuSehat).
+6.  **Dispensing:** Konfirmasi obat diserahkan -> Kurangi stok -> Trigger `MedicationDispense` (SatuSehat).
 
 #### E. Modul Kasir
 1.  **Invoice Generation:** Gabungan Jasa Medis + Obat + Tindakan + Admin.
@@ -149,12 +156,19 @@ graph TD
 
 ### 8. RENCANA PENGEMBANGAN (ROADMAP MVP)
 
-1.  **Sprint 1:** Setup Project, Database Schema, Master Data (Dokter, Poli, Obat/KFA, ICD-10).
+1.  **Sprint 1:** Setup Project, Database Schema (Multi-tenant), Master Data.
 2.  **Sprint 2:** Modul Pendaftaran & Integrasi SatuSehat (Patient & Encounter).
 3.  **Sprint 3:** Modul RME (SOAP) & Integrasi SatuSehat (Condition & Observation).
-4.  **Sprint 4:** E-Resep, Farmasi & Integrasi SatuSehat (Medication).
-5.  **Sprint 5:** Kasir & Billing.
+4.  **Sprint 4:** Farmasi Lanjutan (Inventory, Multi-loc, Expiry) & E-Resep.
+5.  **Sprint 5:** Kasir & Billing & Penunjang (Lab/Rad).
 6.  **Sprint 6:** UAT & Deployment.
+
+### 9. FUTURE DEVELOPMENT ROADMAP (ERP)
+*   **Modul Pembelian (Purchasing)**: PO, Goods Receipt.
+*   **Modul Hutang (AP)**: Supplier Management.
+*   **Modul Piutang (AR)**: Insurance Claim.
+*   **Modul Keuangan (Finance)**: Cash Flow.
+*   **Modul Akuntansi (GL)**: Automasi Jurnal.
 
 ---
 **Perserujuan:**
